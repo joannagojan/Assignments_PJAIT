@@ -49,28 +49,28 @@ public:
     }
 
 };
-
 class EncoderService {
     private:
         std::vector<ShiftAndMask> bitLayout;
-
-    void validate(const std::vector<ShiftAndMask>& bitLayout) 
-        uint16_t all_masks = 0;
-        for (const auto& element : bitLayout) {
-            uint16_t mask = element.get_mask();
-            if ((all_masks & mask) != 0)
-                throw std::invalid_argument("The masks are overlapping");
-            all_masks |= mask;
+    
+        void validate(const std::vector<ShiftAndMask>& bitLayout) {
+            uint16_t all_masks = 0;
+            for (const auto& element : bitLayout) {
+                uint16_t mask = element.get_mask();
+                if ((all_masks & mask) != 0)
+                    throw std::invalid_argument("The masks are overlapping");
+                all_masks |= mask;
+            }
         }
     
     public:
-        MasksAndShiftsService(const std::vector<ShiftAndMask>& bitLayout)
-            : bitLayout(bitLayout) {validate(bitLayout);}
+        EncoderService(const std::vector<ShiftAndMask>& bitLayout)
+            : bitLayout(bitLayout) { validate(bitLayout); }
     
         uint16_t encode(const std::vector<int>& values) {
             if (bitLayout.size() != values.size())
-            throw std::invalid_argument("The number of masks needs to match values");
-
+                throw std::invalid_argument("The number of masks needs to match values");
+    
             uint16_t result = 0;
             for (int i = 0; i < values.size(); i++) {
                 result |= (values[i] << bitLayout[i].get_position());
@@ -79,97 +79,68 @@ class EncoderService {
         }
     };
 
-class FromCodeToValuesService {
-    private:
-    uint16_t code;
-
-
-    public: 
-    FromCodeToValuesService(uint16_t code);
     
-    uint16_t getCode() {return this->code;}
-    void printValues(std::vector<ShiftAndMask> set) {
-        for (auto& element: set) {
-            uint16_t value = (code & element.get_mask()) >> element.get_position();
-            std::cout << std::setw(20) << std::left <<(element.get_name() + ":") << value <<  '\n';
-        }
+    class DecoderService {
+        private:
+            uint16_t code;
+            std::vector<ShiftAndMask> layout;
+        
+        public:
+            DecoderService(uint16_t code, const std::vector<ShiftAndMask>& layout)
+                : code(code), layout(layout) {}
+        
+            uint16_t getCode() { return this->code; }
+        
+            void printValues() const {
+                for (const auto& mask : layout) {
+                    uint16_t value = (code & mask.get_mask()) >> mask.get_position();
+                    std::cout << std::setw(20) << std::left << (mask.get_name() + ":") << value << '\n';
+                }
+            }
+        };
+    
+std::vector<ShiftAndMask> createLayout() {
+    return {
+        ShiftAndMask(15, 1, "sex"),
+        ShiftAndMask(13, 2, "marital status"),
+        ShiftAndMask(11, 2, "age group"),
+        ShiftAndMask(9, 2, "education"),
+        ShiftAndMask(7, 2, "living place"),
+        ShiftAndMask(3, 4, "region"),
+        ShiftAndMask(0, 3, "answer")
     };
-
-}
-    
-
-unsigned short encode(int sex,
-    int marit,
-    int age,
-    int edu,
-    int place, int region,
-    int answer) {
-
-    // SMMAAEEPPRRRRAAA
-    ShiftAndMask sex_code(15, 1, "sex");
-    ShiftAndMask marital_code(13, 2, "marital status");
-    ShiftAndMask age_code(11, 2, "age group");
-    ShiftAndMask edu_code(9, 2, "education");
-    ShiftAndMask place_code(7, 2, "living place");
-    ShiftAndMask region_code(3, 4, "region");
-    ShiftAndMask answer_code(0, 3, "answer");
-
-    std::vector<int> values = { sex, marit, age, edu, place, region, answer };
-    std::vector<ShiftAndMask> set = { sex_code, marital_code, age_code, edu_code, place_code, region_code, answer_code };
-    MasksAndShiftsService service(w_divorced_3145_uni_country_12_6);
-    uint16_t calculate_number = service.setValues(set);
-
-    return calculate_number;
 }
 
 
-// void info(unsigned short code) {
-//     ShiftAndMask sex_code(15, 1, "sex");
-//     ShiftAndMask marital_code(13, 2, "marital status");
-//     ShiftAndMask age_code(11, 2, "age group");
-//     ShiftAndMask edu_code(9, 2, "education");
-//     ShiftAndMask place_code(7, 2, "living place");
-//     ShiftAndMask region_code(3, 4, "region");
-//     ShiftAndMask answer_code(0, 3, "answer");
 
-//     std::vector<ShiftAndMask> set = { sex_code, marital_code, age_code, edu_code, place_code, region_code, answer_code };
 
-//     for (auto& element: set) {
-//         uint16_t value = (code & element.get_mask()) >> element.get_position();
-//         std::cout << std::setw(20) << std::left <<(element.get_name() + ":") << value <<  '\n';
-//     }
-// }
 
 int main() {
     try{
-        unsigned short w_married_3145__elementary_bigCity_13_6 = encode(0, 1, 1, 0, 3, 13, 6);
-        unsigned short w_divorced_3145_uni_country_12_6 = encode(0,3,2,3,0,12,6);
-        unsigned short m_bachelor_3145_highschool_smallCity_6_7 = encode(1,0,3,1,3,6,7);
 
-        std::cout << "---------------------------------------------" << '\n';
-        std::cout << "result for w_married_3145__elementary_bigCity_13_6: " << '\n' <<  
-        std::bitset<16>(w_married_3145__elementary_bigCity_13_6) << '\n';
-        // ShiftAndMask sex_code(15, 1, "sex");
-        // ShiftAndMask marital_code(13, 2, "marital status");
-        // ShiftAndMask age_code(11, 2, "age group");
-        // ShiftAndMask edu_code(9, 2, "education");
-        // ShiftAndMask place_code(7, 2, "living place");
-        // ShiftAndMask region_code(3, 4, "region");
-        // ShiftAndMask answer_code(0, 3, "answer");
-        // std::vector<ShiftAndMask> set = { sex_code, marital_code, age_code, edu_code, place_code, region_code, answer_code };
-        // FromCodeToValuesService codeService(w_divorced_3145_uni_country_12_6);
-        // codeService.printValues();
-        // info(w_married_3145__elementary_bigCity_13_6);
+        std::vector<ShiftAndMask> layout = createLayout();
+        EncoderService encoder(layout);
 
-        std::cout << "---------------------------------------------"<< '\n';
-        std::cout << "result for w_divorced_3145_uni_country_12_6: " << '\n' << 
-        std::bitset<16>(w_divorced_3145_uni_country_12_6) << '\n';
-        // info(w_divorced_3145_uni_country_12_6);
+        std::vector<int> w_married_3145_elementary_bigCity_13_6 = {0, 1, 1, 0, 3, 13, 6};
+        std::vector<int> w_divorced_3145_uni_country_12_6 = {0, 3, 2, 3, 0, 12, 6};
+        std::vector<int> m_bachelor_3145_highschool_smallCity_6_7 = {1, 0, 3, 1, 3, 6, 7};
 
-        std::cout << "---------------------------------------------"<< '\n';
-        std::cout << "result for m_bachelor_3145_highschool_smallCity_6_7 : " << '\n' <<  
-        std::bitset<16>(m_bachelor_3145_highschool_smallCity_6_7 ) << '\n';
-        // info(m_bachelor_3145_highschool_smallCity_6_7);
+        uint16_t code_married = encoder.encode(w_married_3145_elementary_bigCity_13_6);
+        uint16_t code_divorced = encoder.encode(w_divorced_3145_uni_country_12_6);
+        uint16_t code_bachelor = encoder.encode(m_bachelor_3145_highschool_smallCity_6_7);
+
+
+        std::cout << "Result w_married_3145_elementary_bigCity_13_6: " << std::bitset<16>(code_married ) << '\n';
+        DecoderService decoder_married(code_married, layout);
+        decoder_married.printValues();
+
+        std::cout << "Result w_divorced_3145_uni_country_12_6: " << std::bitset<16>(code_divorced) << '\n';
+        DecoderService decoder_divorced(code_divorced, layout);
+        decoder_divorced.printValues();
+
+        std::cout << "Result m_bachelor_3145_highschool_smallCity_6_7: " << std::bitset<16>(code_bachelor) << '\n';
+        DecoderService decoder_bachelor(code_bachelor, layout);
+        decoder_bachelor.printValues();
 
 
     }
