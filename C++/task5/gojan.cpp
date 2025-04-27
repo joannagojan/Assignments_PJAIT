@@ -3,7 +3,7 @@
 #include <cctype>
 #include <vector>
 #include <functional>
-
+#include <stdexcept>
 
 
 class ValidatorAbstract {
@@ -15,7 +15,7 @@ class ValidatorAbstract {
 class ValidateOccurences : ValidatorAbstract {
     public:
     ValidateOccurences(std::function<bool(char)> condition, int target) : 
-    condition(condition), targer(target) {validate(target)};
+    condition(condition), target(target) {validate(target);};
 
 
     bool validate(const std::string& text) override {
@@ -30,9 +30,9 @@ class ValidateOccurences : ValidatorAbstract {
         std::function<bool(char)> condition;
         int target;
 
-        bool validate(int target) {
+        void validate(int target) {
             if (target <= 0) {
-                throw new std::illegal_argument("The counter target is cannot not positive")
+                throw std::invalid_argument("The counter target is cannot not positive");
             };
         }
 };
